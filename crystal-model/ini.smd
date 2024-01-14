@@ -1,4 +1,5 @@
-STR1024    ^^ 1    !! ShEngine::ini_properties.application_name        --> crystal-model             ***
-STR1024    ^^ 1    !! ShEngine::ini_properties.application_smd_path    --> ../../smd/application.smd ***
+STR1024    ^^ 1    !! ShEngine::ini_properties.application_name        --> crystal-model                ***
+STR1024    ^^ 1    !! ShEngine::ini_properties.application_smd_path    --> ../../smd/application.smd    ***
+STR1024    ^^ 1    !! ShEngine::ini_properties.vulkan_memory_smd_path  --> ../../smd/vulkan-memory.smd  ***
 
 copy to bin/windows or bin/linux

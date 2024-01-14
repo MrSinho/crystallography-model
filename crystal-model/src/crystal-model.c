@@ -8,9 +8,60 @@ extern "C" {
 #include <shengine/shExport.h>//required when building a shared library
 
 
+#include <memory.h>
+
 
 //#include "crystallography/crystallography.h"
 
+#define FILM_VERTEX_COUNT 6
+
+typedef struct modelvec4 {
+    float x;
+    float y;
+    float z;
+    float w;
+} modelvec4;
+
+typedef struct modelvec2 {
+    float x;
+    float y;
+    float z;
+    float w;
+} modelvec2;
+
+
+
+#define MODEL_LATTICE_UNIT_MAX_ATOM_COUNT 256
+#define LATTICE_UNIT_DATA_OFFSET          0
+#define LATTICE_UNIT_DATA_SIZE            sizeof(LatticeUnit)
+#define FILM_CONDITIONS_OFFSET            LATTICE_UNIT_DATA_SIZE
+#define FILM_CONDITIONS_SIZE              sizeof(FilmConditions)
+#define MODEL_SIZE                        (LATTICE_UNIT_DATA_SIZE + FILM_CONDITIONS_SIZE)
+
+
+typedef struct LatticeUnit {//unità reticolare
+    modelvec4 atoms_positions_ag[MODEL_LATTICE_UNIT_MAX_ATOM_COUNT];
+} LatticeUnit;
+
+
+typedef struct FilmConditions {
+    //shmodelvec2 film_size_m;
+    //modelvec2 indicent_angle_rad;
+    modelvec4 incident_ray;
+    float     lambda_ag;
+    float     film_distance_cm;
+    uint32_t  atom_count;
+} FilmConditions;
+
+typedef struct Model {
+    LatticeUnit    lattice_unit_data;
+    FilmConditions film_conditions;
+    VkFence        copy_fence;
+    VkBuffer       staging_buffer;
+    VkBuffer       dst_buffer;
+    VkDeviceMemory staging_memory;
+    VkDeviceMemory dst_memory;
+} Model;
 
 
 uint8_t SH_ENGINE_EXPORT_FUNCTION model_start(
@@ -20,6 +71,270 @@ uint8_t SH_ENGINE_EXPORT_FUNCTION model_start(
 
     shEngineGuiSetup(p_engine);
 
+    p_engine->p_ext = calloc(1, sizeof(Model));
+    shApplicationError(
+        p_engine->p_ext == NULL,
+        "model_start: invalid engine extension memory",
+        return 0
+    );
+
+    Model* p_model = (Model*)p_engine->p_ext;
+
+#define ATOM_COUNT 6
+
+    float atoms_pos_ag[8 * 4] = {
+        //first vector (y aligned)
+         0.0f,  0.0f,  0.0f, 1.0f,
+        10.0f,  0.0f,  0.0f, 1.0f,
+
+        //second vector (x aligned)
+         0.0f,  0.0f,  0.0f, 1.0f,
+         0.0f, 10.0f,  0.0f, 1.0f,
+
+         //third vector
+         0.0f,  0.0f,  0.0f, 1.0f,
+         0.0f,  0.0f, 5.0f, 1.0f
+    };
+
+    memcpy(
+        p_model->lattice_unit_data.atoms_positions_ag,
+        atoms_pos_ag,
+        sizeof(atoms_pos_ag)
+    );
+
+    p_model->film_conditions.atom_count        = ATOM_COUNT;
+    p_model->film_conditions.lambda_ag         = 5.0f;
+    p_model->film_conditions.film_distance_cm = 1.0f;
+
+    ShVkPipelinePool* p_pool                = &p_engine->pipeline_pool;
+    ShVkPipeline*     p_pipeline            = &p_pool->pipelines[0];
+    uint32_t          swapchain_image_count = p_engine->core.swapchain_image_count;
+
+
+    VkDevice          device          = p_engine->core.device;
+    VkPhysicalDevice  physical_device = p_engine->core.physical_device;
+    VkCommandBuffer   cmd_buffer      = p_engine->core.graphics_cmd_buffers[0];
+    VkQueue           queue           = p_engine->core.graphics_queue;
+
+
+    //allocate memory
+    shCreateBuffer(
+        device,                           //device
+        MODEL_SIZE,                       //size
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT, //usage
+        VK_SHARING_MODE_EXCLUSIVE,        //sharing_mode
+        &p_model->staging_buffer          //p_buffer
+    );
+
+    shCreateBuffer(
+        device,                                                                                                     //device
+        MODEL_SIZE,                                                                                                 //size
+        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, //usage
+        VK_SHARING_MODE_EXCLUSIVE,                                                                                  //sharing_mode
+        &p_model->dst_buffer                                                                                        //p_buffer
+    );
+
+    shAllocateBufferMemory(
+        device,                                                                     //device
+        physical_device,                                                            //physical_device
+        p_model->staging_buffer,                                                    //buffer
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, //property_flags
+        &p_model->staging_memory                                                    //p_memory
+    );
+
+    shAllocateBufferMemory(
+        device,                              //device
+        physical_device,                     //physical_device
+        p_model->dst_buffer,                 //buffer
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, //property_flags
+        &p_model->dst_memory                 //p_memory
+    );
+
+    shBindBufferMemory(
+        device,                  //device
+        p_model->staging_buffer, //buffer
+        0,                       //offset
+        p_model->staging_memory  //buffer_memory
+    );
+
+    shBindBufferMemory(
+        device,              //device
+        p_model->dst_buffer, //buffer
+        0,                   //offset
+        p_model->dst_memory  //buffer_memory
+    );
+
+    VkBuffer          staging_buffer = p_model->staging_buffer;
+    VkDeviceMemory    staging_memory = p_model->staging_memory;
+    VkBuffer          dst_buffer     = p_model->dst_buffer;
+    VkDeviceMemory    dst_memory     = p_model->dst_memory;
+
+    shPipelinePoolSetDescriptorBufferInfos(
+        0,                     //first_descriptor
+        swapchain_image_count, //descriptor_count
+        dst_buffer,            //buffer
+        LATTICE_UNIT_DATA_OFFSET,  //buffer_offset
+        LATTICE_UNIT_DATA_SIZE,    //buffer_size
+        p_pool                 //p_pipeline_pool
+    );
+
+    shPipelinePoolSetDescriptorBufferInfos(
+        swapchain_image_count,  //first_descriptor
+        swapchain_image_count,  //descriptor_count
+        dst_buffer,             //buffer
+        FILM_CONDITIONS_OFFSET, //buffer_offset
+        FILM_CONDITIONS_SIZE,   //buffer_size
+        p_pool                  //p_pipeline_pool
+    );
+
+
+    shPipelinePoolCreateDescriptorSetLayoutBinding(
+        0,                                 //binding
+        VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, //descriptor_type
+        1,                                 //descriptor_set_count
+        VK_SHADER_STAGE_FRAGMENT_BIT,      //shader_stage
+        p_pool                             //p_pipeline_pool
+    );
+
+    shPipelinePoolCreateDescriptorSetLayoutBinding(
+        0,                                 //binding
+        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, //descriptor_type
+        1,                                 //descriptor_set_count
+        VK_SHADER_STAGE_FRAGMENT_BIT,      //shader_stage
+        p_pool                             //p_pipeline_pool
+    );
+
+
+    shPipelinePoolCreateDescriptorSetLayout(
+        device, //device
+        0,      //first_binding_idx
+        1,      //binding_count
+        0,      //set_layout_idx
+        p_pool  //p_pipeline_pool
+    );
+
+    shPipelinePoolCreateDescriptorSetLayout(
+        device,                //device
+        1,                     //first_binding_idx
+        1,                     //binding_count
+        swapchain_image_count, //set_layout_idx
+        p_pool                 //p_pipeline_pool
+    );
+
+
+    shPipelinePoolCopyDescriptorSetLayout(
+        0,                     //src_set_layout_idx
+        0,                     //first_dst_set_layout_idx
+        swapchain_image_count, //dst_set_layout_count
+        p_pool                 //p_pipeline_pool
+    );
+
+    shPipelinePoolCopyDescriptorSetLayout(
+        swapchain_image_count, //src_set_layout_idx
+        swapchain_image_count, //first_dst_set_layout_idx
+        swapchain_image_count, //dst_set_layout_count
+        p_pool                 //p_pipeline_pool
+    );
+
+
+
+    shPipelinePoolCreateDescriptorPool(
+        device,                            //device
+        0,                                 //pool_idx
+        VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, //descriptor_type
+        swapchain_image_count,             //descriptor_count
+        p_pool                             //p_pipeline_pool
+    );
+
+    shPipelinePoolCreateDescriptorPool(
+        device,                            //device
+        1,                                 //pool_idx
+        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, //descriptor_type
+        swapchain_image_count,             //descriptor_count
+        p_pool                             //p_pipeline_pool
+    );
+
+
+
+    shPipelinePoolAllocateDescriptorSetUnits(
+        device,                            //device
+        0,                                 //binding
+        0,                                 //pool_idx
+        VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, //descriptor_type
+        0,                                 //first_descriptor_set_unit
+        swapchain_image_count,             //descriptor_set_unit_count
+        p_pool                             //p_pipeline_pool
+    );
+
+    shPipelinePoolAllocateDescriptorSetUnits(
+        device,                            //device
+        0,                                 //binding
+        1,                                 //pool_idx
+        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, //descriptor_type
+        swapchain_image_count,             //first_descriptor_set_unit
+        swapchain_image_count,             //descriptor_set_unit_count
+        p_pool                             //p_pipeline_pool
+    );
+
+    shPipelinePoolUpdateDescriptorSetUnits(
+        device,                    //device
+        0,                         //first_descriptor_set_unit
+        swapchain_image_count * 2, //descriptor_set_unit_count
+        p_pool                     //p_pipeline_pool
+    );
+
+    shPipelineSetVertexInputState(p_pipeline);
+    shPipelineCreateInputAssembly(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, SH_FALSE, p_pipeline);
+
+    shPipelineCreateRasterizer(VK_POLYGON_MODE_FILL, SH_FALSE, p_pipeline);
+    shPipelineSetMultisampleState(p_engine->core.sample_count, 0.0f, p_pipeline);
+    shPipelineSetViewport(
+        0, 0, p_engine->window.width, p_engine->window.height,
+        0, 0, p_engine->window.width, p_engine->window.height, 
+        p_pipeline
+    );
+    shPipelineColorBlendSettings(SH_FALSE, SH_FALSE, SH_ENGINE_SUBPASS_COLOR_ATTACHMENT_COUNT, p_pipeline);
+
+    uint32_t shader_size = 0;
+    char* shader_code = (char*)shReadCode(
+        "../../shaders/bin/film.vert.spv",
+        "rb",
+        &shader_size
+    );
+    shApplicationError(shader_code == NULL, "model_start: invalid shader code memory", return 0);
+
+    shPipelineCreateShaderModule(device, shader_size, shader_code, p_pipeline);
+    shPipelineCreateShaderStage(VK_SHADER_STAGE_VERTEX_BIT, p_pipeline);
+    free(shader_code);
+
+    shader_code = (char*)shReadCode(
+        "../../shaders/bin/film.frag.spv",
+        "rb",
+        &shader_size
+    );
+    shApplicationError(shader_code == NULL, "invalid shader code memory", return 0);
+
+    shPipelineCreateShaderModule(device, shader_size, shader_code, p_pipeline);
+    shPipelineCreateShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT, p_pipeline);
+    free(shader_code);
+
+
+
+    shApplicationError(
+        shPipelineCreateLayout(device, 0, swapchain_image_count * 2, p_pool, p_pipeline) == 0,
+        "model_start: failed creating pipeline layout",
+        return 0
+    );
+
+    shApplicationError(
+        shSetupGraphicsPipeline(device, p_engine->core.renderpass, p_pipeline) == 0,
+        "model_start: failed creating pipeline",
+        return 0
+    );
+
+
+    shCreateFences(device, 1, 1, &p_model->copy_fence);
+
     return 1;
 }
 
@@ -28,18 +343,159 @@ uint8_t SH_ENGINE_EXPORT_FUNCTION model_update(
 ) {
     shApplicationError(p_engine == NULL, "model_update: invalid engine memory", return 0);
 
+    Model*            p_model               = (Model*)p_engine->p_ext;
+
+    VkBuffer          staging_buffer        = p_model->staging_buffer;
+    VkDeviceMemory    staging_memory        = p_model->staging_memory;
+    VkBuffer          dst_buffer            = p_model->dst_buffer;
+
+    VkDevice          device                = p_engine->core.device;
+    VkCommandBuffer   transfer_cmd_buffer   = p_engine->core.transfer_cmd_buffer;
+    VkQueue           transfer_queue        = p_engine->core.transfer_queue;
+
+    
+    shWriteMemory(
+        device,                 //device
+        staging_memory,         //memory
+        LATTICE_UNIT_DATA_OFFSET,   //offset
+        LATTICE_UNIT_DATA_SIZE,     //data_size
+        &p_model->lattice_unit_data //p_data
+    );
+
+    shWriteMemory(
+        device,                   //device
+        staging_memory,           //memory
+        FILM_CONDITIONS_OFFSET,   //offset
+        FILM_CONDITIONS_SIZE,     //data_size
+        &p_model->film_conditions //p_data
+    );
+
+    shWaitForFences(
+        device,               //device
+        1,                    //fence_count
+        &p_model->copy_fence, //p_fences
+        1,                    //wait_for_all
+        UINT64_MAX            //timeout_ns
+    );
+
+    shResetFences(
+        device,              //device
+        1,                   //fence_count
+        &p_model->copy_fence //p_fences
+    );
+
+    shBeginCommandBuffer(transfer_cmd_buffer);
+
+    shCopyBuffer(
+        transfer_cmd_buffer,     //transfer_cmd_buffer
+        p_model->staging_buffer, //src_buffer
+        0,                       //src_offset
+        0,                       //dst_offset
+        MODEL_SIZE,              //size
+        p_model->dst_buffer      //dst_buffer
+    );
+
+    shEndCommandBuffer(transfer_cmd_buffer);
+
+    shQueueSubmit(
+        1,                              //cmd_buffer_count
+        &transfer_cmd_buffer,           //p_cmd_buffers
+        transfer_queue,                 //queue
+        p_model->copy_fence,            //fence
+        0,                              //semaphores_to_wait_for_count
+        NULL,                           //p_semaphores_to_wait_for
+        VK_PIPELINE_STAGE_TRANSFER_BIT, //wait_stage
+        0,                              //signal_semaphore_count
+        NULL                            //p_signal_semaphores
+    );
+    
+    shWaitForFences(
+        device,               //device
+        1,                    //fence_count
+        &p_model->copy_fence, //p_fences
+        1,                    //wait_for_all
+        UINT64_MAX            //timeout_ns
+    );
+
+    ShWindow window = p_engine->window;
+
+    if (shIsKeyDown(window, SH_KEY_Q)) {
+        p_model->film_conditions.lambda_ag += 1.0f * p_engine->time.delta_time;
+    }
+
+    if (shIsKeyDown(window, SH_KEY_W)) {
+        p_model->film_conditions.lambda_ag -= 1.0f * p_engine->time.delta_time;
+    }
+
+    if (shIsKeyDown(window, SH_KEY_A)) {
+        p_model->film_conditions.incident_ray.x += 1.0f * p_engine->time.delta_time;
+    }
+    
+    if (shIsKeyDown(window, SH_KEY_S)) {
+        p_model->film_conditions.incident_ray.x -= 1.0f * p_engine->time.delta_time;
+    }
+    
+    if (shIsKeyDown(window, SH_KEY_D)) {
+        p_model->film_conditions.incident_ray.y += 1.0f * p_engine->time.delta_time;
+    }
+
+    if (shIsKeyDown(window, SH_KEY_F)) {
+        p_model->film_conditions.incident_ray.y -= 1.0f * p_engine->time.delta_time;
+    }
+
+    if (shIsKeyDown(window, SH_KEY_G)) {
+        p_model->film_conditions.incident_ray.z += 1.0f * p_engine->time.delta_time;
+    }
+
+    if (shIsKeyDown(window, SH_KEY_H)) {
+        p_model->film_conditions.incident_ray.z -= 1.0f * p_engine->time.delta_time;
+    }
+
+    if (shIsKeyDown(window, SH_KEY_Z)) {
+        p_model->film_conditions.film_distance_cm += 1.0f * p_engine->time.delta_time;
+    }
+
+    if (shIsKeyDown(window, SH_KEY_X)) {
+        p_model->film_conditions.film_distance_cm -= 1.0f * p_engine->time.delta_time;
+    }
+
+
     ShGui* p_gui = &p_engine->gui;
+
+    char txt[256] = { 0 };
+    snprintf(
+        txt, 256, "lambda: %.2f A\nincident angle: (%.2f, %.2f, %.2f) rad\nfilm distance: %.2f",
+        p_model->film_conditions.lambda_ag,
+        p_model->film_conditions.incident_ray.x,
+        p_model->film_conditions.incident_ray.y,
+        p_model->film_conditions.incident_ray.z,
+        p_model->film_conditions.film_distance_cm
+    );
+    //snprintf(
+    //    txt, 256, "lambda: %.2f A\n", p_model->film_conditions.lambda_ag
+    //);
 
     shGuiText(
         p_gui,
         SH_GUI_VEC2_ZERO,
         SH_GUI_COLOR_WHITE,
         20.0f,
-        "@mrsinho",
+        txt,
         SH_GUI_EDGE_LEFT | SH_GUI_EDGE_TOP
     );
 
-    //compile shaders
+    snprintf(
+        txt, 256, "fps: %.2f", 1.0f / (float)p_engine->time.delta_time
+    );
+
+    shGuiText(
+        p_gui,
+        SH_GUI_VEC2_ZERO,
+        SH_GUI_COLOR_WHITE,
+        20.0f,
+        txt,
+        SH_GUI_EDGE_TOP | SH_GUI_CENTER_WIDTH
+    );
 
     return 1;
 }
@@ -47,24 +503,111 @@ uint8_t SH_ENGINE_EXPORT_FUNCTION model_update(
 uint8_t SH_ENGINE_EXPORT_FUNCTION model_main_cmd_buffer(
     ShEngine* p_engine
 ) {
+    shApplicationError(p_engine == NULL, "model_main_cmd_buffer: invalid engine memory", return 0);
+
     return 1;
 }
 
 uint8_t SH_ENGINE_EXPORT_FUNCTION model_main_renderpass(
     ShEngine* p_engine
 ) {
+    shApplicationError(p_engine == NULL, "model_main_renderpass: invalid engine memory", return 0);
+
+    int32_t           swapchain_image_idx   = p_engine->core.swapchain_image_idx;
+    int32_t           swapchain_image_count = p_engine->core.swapchain_image_count;
+    VkCommandBuffer   cmd_buffer            = p_engine->core.graphics_cmd_buffers[swapchain_image_idx];
+    ShVkPipelinePool* p_pool                = &p_engine->pipeline_pool;
+    ShVkPipeline*     p_pipeline            = &p_pool->pipelines[0];
+    Model*            p_model               = (Model*)p_engine->p_ext;
+
+    shPipelineBindDescriptorSetUnits(
+        cmd_buffer,
+        0,
+        swapchain_image_idx,
+        1,
+        VK_PIPELINE_BIND_POINT_GRAPHICS,
+        0,
+        NULL,
+        p_pool,
+        p_pipeline
+    );
+
+    shPipelineBindDescriptorSetUnits(
+        cmd_buffer,
+        1,
+        swapchain_image_count + swapchain_image_idx,
+        1,
+        VK_PIPELINE_BIND_POINT_GRAPHICS,
+        0,
+        NULL,
+        p_pool,
+        p_pipeline
+    );
+
+
+    shBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, p_pipeline);
+
+    shDraw(cmd_buffer, FILM_VERTEX_COUNT, 0, 1, 0);
+
     return 1;
 }
 
 uint8_t SH_ENGINE_EXPORT_FUNCTION model_frame_resize(
     ShEngine* p_engine
 ) {
+    shApplicationError(p_engine == NULL, "model_frame_resize: invalid engine memory", return 0);
+
+    ShVkPipeline* p_pipeline = &p_engine->pipeline_pool.pipelines[0];
+    VkDevice      device     = p_engine->core.device;
+
+    shDestroyPipeline(device, p_pipeline->pipeline);
+    shPipelineSetViewport(
+        0, 0, p_engine->window.width, p_engine->window.height,
+        0, 0, p_engine->window.width, p_engine->window.height,
+        p_pipeline
+    );
+
+    shApplicationError(
+        shSetupGraphicsPipeline(device, p_engine->core.renderpass, p_pipeline) == 0,
+        "noise_frame_resize: failed creating pipeline",
+        return 0
+    );
+
     return 1;
 }
 
 uint8_t SH_ENGINE_EXPORT_FUNCTION model_close(
     ShEngine* p_engine
 ) {
+     shApplicationError(p_engine       == NULL, "model_close: invalid engine memory",           return 0);
+    shApplicationError(p_engine->p_ext == NULL, "model_close: invalid engine extension memory", return 0);
+
+    
+    VkDevice          device      =  p_engine->core.device;
+    ShVkPipelinePool* p_pool      = &p_engine->pipeline_pool;
+    ShVkPipeline*     p_pipeline  = &p_pool->pipelines[0];
+    Model*            p_model     = (Model*)p_engine->p_ext;
+
+
+    shWaitDeviceIdle(device);
+    
+    shDestroyFences(device, 1, &p_model->copy_fence);
+
+    shPipelinePoolDestroyDescriptorPools     (device, 0, 1, p_pool);
+    shPipelinePoolDestroyDescriptorSetLayouts(device, 0, 1, p_pool);
+
+	shPipelineDestroyShaderModules(device, 0, 2, p_pipeline);
+	shPipelineDestroyLayout       (device, p_pipeline);
+	shDestroyPipeline             (device, p_pipeline->pipeline);
+	
+    
+	shClearPipeline(p_pipeline);
+
+
+    if (p_engine->p_ext != NULL) {
+        free(p_engine->p_ext);
+    }
+
     return 1;
 }
 

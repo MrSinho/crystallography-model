@@ -7,6 +7,20 @@ Template repository used for many C-based projects. Sets up some boilerplate cod
 
 [TOC]
 
+## Todo
+
+* Film as canvas
+* Mesh input vertices (atoms positions)
+    * smd loader
+    * mesh orientation (optional)
+* Film shader inputs
+    * lambda
+    * distance of film from origin
+    * film orientation (optional)
+
+* 3d view (iper optional)
+* film rotation around the globe animation (iper optional)
+
 ## Overview
 
 This template has been used on many libraries (see [`shengine`](https://mrsinho.github.io/shengine-docs), [`shgui`](https://mrsinho.github.io/shgui-docs))
