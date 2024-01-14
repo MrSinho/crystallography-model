@@ -4,3 +4,6 @@
 [submodule ".shci/shci"]
 	path = .shci/shci
 	url = https://github.com/mrsinho/shci.git
+[submodule "externals/shengine"]
+	path = externals/shengine
+	url = https://github.com/mrsinho/shengine

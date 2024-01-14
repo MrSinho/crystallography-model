@@ -1,0 +1,11 @@
+    APPLICATION PROPERTIES
+
+
+
+STR256    ^^ 1    !! ShEngine::application_properties.shared_name             --> crystal-model          ***
+STR256    ^^ 1    !! ShEngine::application_properties.s_start                 --> model_start            ***
+STR256    ^^ 1    !! ShEngine::application_properties.s_update                --> model_update           ***
+STR256    ^^ 1    !! ShEngine::application_properties.s_main_cmd_buffer       --> model_main_cmd_buffer  ***
+STR256    ^^ 1    !! ShEngine::application_properties.s_main_renderpass       --> model_main_renderpass  ***
+STR256    ^^ 1    !! ShEngine::application_properties.s_frame_resize          --> model_frame_resize     ***
+STR256    ^^ 1    !! ShEngine::application_properties.s_close                 --> model_close            ***

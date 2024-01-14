@@ -1,9 +1,9 @@
-# shtemplate
+# crystallography-model
 
 Template repository used for many C-based projects. Sets up some boilerplate code for C headers, `CMake` and `Doxygen`.
 
 ![](https://img.shields.io/badge/Sinho_softworks-FFBF00?style=for-the-badge&logo=&logoColor=white&labelColor=990042)
-[![](https://img.shields.io/badge/GitHub_repository-000000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/mrsinho/shtemplate)
+[![](https://img.shields.io/badge/GitHub_repository-000000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/mrsinho/crystallography-model)
 
 [TOC]
 
@@ -17,15 +17,25 @@ This template has been used on many libraries (see [`shengine`](https://mrsinho.
 ![](https://img.shields.io/badge/Written_in_C-FFBF00?style=for-the-badge&logo=c&logoColor=white&labelColor=FFA000#.svg)
 ![](https://img.shields.io/badge/Compatible_with_C%2b%2b-FFBF00?style=for-the-badge&logo=c%2b%2b&logoColor=white&labelColor=FFA000#.svg)
 
+
+## Generate CMakeLists.txt (skip)
+
+```shell
+cd externals/shengine
+python export-application.py name=crystal-model path=../../crystal-model
+```
+
 ## Build
 
 Building the template code is fairly simple:
 
 ```shell
+cd    crystal-model
 mkdir build
-cd    build/windows
-cmake ../ -DSH_TEMPLATE_BUILD_EXAMPLE=ON
-cmake --build .
+cd    build
+mkdir windows
+cd    windows
+cmake ../../ -DCRYSTAL_MODEL_BINARY_TYPE=EXECUTABLE -DSH_ENGINE_ROOT_DIR="D:/home/desktop/github/crystallography-model/externals/shengine"
 ```
 
 
