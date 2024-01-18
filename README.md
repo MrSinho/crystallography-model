@@ -53,12 +53,9 @@ cmake ../ -DCRYSTAL_MODEL_BINARY_TYPE=EXECUTABLE -DSH_ENGINE_ROOT_DIR="absolute/
 
 ## Current renders
 
-<img src="docs/media/lambda=5A,d=10A,alphai=90degrees.png" width="200"/>
-
-<img src="docs/media/lambda=1A,d=10A,alphai=90degrees.png" width="320"/>
-
-<img src="docs/media/lambda=5A,d=(10,10)A,alphai=(0, 90)degrees.png" width="525"/>
-
+![](docs/media/lambda=5A,d=10A,alphai=90degrees.png)
+![](docs/media/lambda=1A,d=10A,alphai=90degrees.png)
+![](docs/media/lambda=5A,d=(10,10)A,alphai=(0, 90)degrees.png)
 
 ## Contributions and support
 
