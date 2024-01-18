@@ -1,13 +1,13 @@
 # crystallography-model (draft)
 
-A 3d simulator of crystallography interference and diffraction images by using the Laue's equation. It's written in C and it uses the [`Vulkan API`](https://www.vulkan.org), [shengine](https://github.com/mrsinho/shengine) and [shvulkan](https://github.com/mrsinho/shvulkan).
+A 3d simulator of crystallography interference and diffraction images by using the Laue's equation. It's written in C and it uses the [`Vulkan API`](https://www.vulkan.org), [`shengine`](https://github.com/mrsinho/shengine) and [`shvulkan`](https://github.com/mrsinho/shvulkan).
 
 ![](https://img.shields.io/badge/Sinho_softworks-FFBF00?style=for-the-badge&logo=&logoColor=white&labelColor=990042)
 [![](https://img.shields.io/badge/GitHub_repository-000000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/mrsinho/crystallography-model)
 
 [TOC]
 
-## Todo
+## To do:
 
 * Generate real 3d cones with shaders (need to rewrite shaders)
 * Add projections of the cones on the film
@@ -21,12 +21,6 @@ A 3d simulator of crystallography interference and diffraction images by using t
 ## Blender draft
     
 <img src="docs/media/d=2lambda.png" width="200"/>
-
-## Current renders
-
-<img src="docs/media/lambda=5A,d=10A,alphai=90degrees.png" width="200"/>
-<img src="docs/media/lambda=1A,d=10A,alphai=90degrees.png" width="320"/>
-<img src="docs/media/lambda=5A,d=(10,10)A,alphai=(0, 90)degrees.png" width="525"/>
 
 ## Overview
 
@@ -56,6 +50,14 @@ mkdir build
 cd    build
 cmake ../ -DCRYSTAL_MODEL_BINARY_TYPE=EXECUTABLE -DSH_ENGINE_ROOT_DIR="absolute/path/to/shengine/submodule"
 ```
+
+## Current renders
+
+<img src="docs/media/lambda=5A,d=10A,alphai=90degrees.png" width="200"/>
+
+<img src="docs/media/lambda=1A,d=10A,alphai=90degrees.png" width="320"/>
+
+<img src="docs/media/lambda=5A,d=(10,10)A,alphai=(0, 90)degrees.png" width="525"/>
 
 
 ## Contributions and support
