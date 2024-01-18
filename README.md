@@ -55,7 +55,7 @@ cmake ../ -DCRYSTAL_MODEL_BINARY_TYPE=EXECUTABLE -DSH_ENGINE_ROOT_DIR="absolute/
 
 ![](docs/media/lambda=5A,d=10A,alphai=90degrees.png)
 ![](docs/media/lambda=1A,d=10A,alphai=90degrees.png)
-![](docs/media/lambda=5A,d=(10,10)A,alphai=(0, 90)degrees.png)
+![](docs/media/lambda=5A,d=10,10A,alphai=0,90degrees.png)
 
 ## Contributions and support
 
