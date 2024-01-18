@@ -5,16 +5,11 @@ A 3d simulator of crystallography interference and diffraction images by using t
 ![](https://img.shields.io/badge/Sinho_softworks-FFBF00?style=for-the-badge&logo=&logoColor=white&labelColor=990042)
 [![](https://img.shields.io/badge/GitHub_repository-000000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/mrsinho/crystallography-model)
 
-
-<img src="docs/media/lambda=5A,d=10A,alphai=90degrees.png" width="200"/>
-<img src="docs/media/lambda=1A,d=10A,alphai=90degrees.png" width="320"/>
-<img src="docs/media/lambda=5A,d=(10,10)A,alphai=(0, 90)degrees.png" width="525"/>
-
 [TOC]
 
 ## Todo
 
-* Generate real 3d cones with shaders
+* Generate real 3d cones with shaders (need to rewrite shaders)
 * Add projections of the cones on the film
     * currently the film is only a canvas of angles
     * missing orientation and position of the lattice and of the film
@@ -26,6 +21,12 @@ A 3d simulator of crystallography interference and diffraction images by using t
 ## Blender draft
     
 <img src="docs/media/d=2lambda.png" width="200"/>
+
+## Current renders
+
+<img src="docs/media/lambda=5A,d=10A,alphai=90degrees.png" width="200"/>
+<img src="docs/media/lambda=1A,d=10A,alphai=90degrees.png" width="320"/>
+<img src="docs/media/lambda=5A,d=(10,10)A,alphai=(0, 90)degrees.png" width="525"/>
 
 ## Overview
 
