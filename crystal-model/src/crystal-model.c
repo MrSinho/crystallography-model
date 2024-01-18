@@ -80,16 +80,16 @@ uint8_t SH_ENGINE_EXPORT_FUNCTION model_start(
 
     Model* p_model = (Model*)p_engine->p_ext;
 
-#define ATOM_COUNT 6
+#define ATOM_COUNT 4
 
     float atoms_pos_ag[8 * 4] = {
-        //first vector (y aligned)
-         0.0f,  0.0f,  0.0f, 1.0f,
-        10.0f,  0.0f,  0.0f, 1.0f,
-
-        //second vector (x aligned)
+        
+        //first vector (x aligned)
          0.0f,  0.0f,  0.0f, 1.0f,
          0.0f, 10.0f,  0.0f, 1.0f,
+         //second vector (y aligned)
+         0.0f,  0.0f,  0.0f, 1.0f,
+        10.0f,  0.0f,  0.0f, 1.0f,
 
          //third vector
          0.0f,  0.0f,  0.0f, 1.0f,

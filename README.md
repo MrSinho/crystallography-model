@@ -1,25 +1,31 @@
-# crystallography-model
+# crystallography-model (draft)
 
-Template repository used for many C-based projects. Sets up some boilerplate code for C headers, `CMake` and `Doxygen`.
+A 3d simulator of crystallography interference and diffraction images by using the Laue's equation. It's written in C and it uses the [`Vulkan API`](https://www.vulkan.org), [shengine](https://github.com/mrsinho/shengine) and [shvulkan](https://github.com/mrsinho/shvulkan).
 
 ![](https://img.shields.io/badge/Sinho_softworks-FFBF00?style=for-the-badge&logo=&logoColor=white&labelColor=990042)
 [![](https://img.shields.io/badge/GitHub_repository-000000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/mrsinho/crystallography-model)
+
+
+<img src="docs/media/lambda=5A,d=10A,alphai=90degrees.png" width="200"/>
+<img src="docs/media/lambda=1A,d=10A,alphai=90degrees.png" width="320"/>
+<img src="docs/media/lambda=5A,d=(10,10)A,alphai=(0, 90)degrees.png" width="525"/>
 
 [TOC]
 
 ## Todo
 
-* Film as canvas
-* Mesh input vertices (atoms positions)
-    * smd loader
-    * mesh orientation (optional)
-* Film shader inputs
-    * lambda
-    * distance of film from origin
-    * film orientation (optional)
+* Generate real 3d cones with shaders
+* Add projections of the cones on the film
+    * currently the film is only a canvas of angles
+    * missing orientation and position of the lattice and of the film
+* smd loader for 1d/2d/3d lattice properties and film properties
+* 3d view
+* abstract 3d library from the application
+* shci tests
 
-* 3d view (iper optional)
-* film rotation around the globe animation (iper optional)
+## Blender draft
+    
+<img src="docs/media/d=2lambda.png" width="200"/>
 
 ## Overview
 
@@ -32,7 +38,7 @@ This template has been used on many libraries (see [`shengine`](https://mrsinho.
 ![](https://img.shields.io/badge/Compatible_with_C%2b%2b-FFBF00?style=for-the-badge&logo=c%2b%2b&logoColor=white&labelColor=FFA000#.svg)
 
 
-## Generate CMakeLists.txt (skip)
+## (Skip) CMakeLists.txt generation
 
 ```shell
 cd externals/shengine
@@ -41,15 +47,13 @@ python export-application.py name=crystal-model path=../../crystal-model
 
 ## Build
 
-Building the template code is fairly simple:
+Building the program is fairly simple:
 
 ```shell
 cd    crystal-model
 mkdir build
 cd    build
-mkdir windows
-cd    windows
-cmake ../../ -DCRYSTAL_MODEL_BINARY_TYPE=EXECUTABLE -DSH_ENGINE_ROOT_DIR="D:/home/desktop/github/crystallography-model/externals/shengine"
+cmake ../ -DCRYSTAL_MODEL_BINARY_TYPE=EXECUTABLE -DSH_ENGINE_ROOT_DIR="absolute/path/to/shengine/submodule"
 ```
 
 

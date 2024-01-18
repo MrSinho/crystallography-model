@@ -136,10 +136,10 @@ void main() {
             //intensity += 0.01f / distance((frag_position.x * pi) + 0.5 * pi, alpha_s_y);
             
             if (scatter_x_visible == 1) {//horizontal lines
-                intensity.x += 0.01f / distance((frag_position.y * pi) + 0.5 * pi, alpha_s_x);
+                intensity.x += 0.005f / distance((frag_position.y * pi) + 0.5 * pi, alpha_s_x);
             }
             if (scatter_y_visible == 1) {//vertical lines
-                intensity.y += 0.01f / distance((frag_position.x * pi) + 0.5 * pi, alpha_s_y);
+                intensity.y += 0.005f / distance((frag_position.x * pi) + 0.5 * pi, alpha_s_y);
             }
             if (scatter_z_visible == 1) {//xy cone
                 //intensity.z += 0.01f / distance((frag_position.x * pi) + 0.5 * pi, alpha_s_z);
@@ -150,10 +150,10 @@ void main() {
                 //    intensity.z = 1.0f;
                 //}
 
-                float r = distance(frag_position.xy, vec2(0.0f));
-                if (r < abs(alpha_s_z)) {
-                    fragColor = vec4(1.0f);
-                }
+                //float r = distance(frag_position.xy, vec2(0.0f));
+                //if (r < abs(alpha_s_z)) {
+                //    fragColor = vec4(1.0f);
+                //}
                 
             }
 #endif//0
@@ -161,13 +161,16 @@ void main() {
         
     }
 
-    //float intersection_threshold = 0.6f;
-    //if (intensity.x > intersection_threshold && intensity.y > intersection_threshold) {
-    //    intensity.z = intensity.x * intensity.y / 2.0;
-    //}
+    float intersection_threshold = 0.09f;
+    if (intensity.x > intersection_threshold && intensity.y > intersection_threshold) {
+        //intensity.z = intensity.x * intensity.y / 2.0;
+        intensity.z = 1.0f;
+    }
 
     fragColor = vec4(intensity.x, intensity.y, intensity.z, 1.0f);
-    //fragColor = vec4(intensity.z);
+    fragColor = vec4(intensity.y, intensity.y, intensity.y, 1.0f);
+    fragColor = vec4(intensity.x, intensity.x, intensity.x, 1.0f);
+    fragColor = vec4(intensity.z);
 
     //float r = distance(frag_position.xy, vec2(0.0f));
     //if (r < 0.5f) {
