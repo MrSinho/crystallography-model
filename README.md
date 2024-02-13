@@ -17,6 +17,9 @@ A 3d simulator of crystallography interference and diffraction images by using t
 * 3d view
 * abstract 3d library from the application
 * shci tests
+* From a source image find the lattice
+* Draw source image maybe with smd??
+* Compute interference coordinates and angles before fragment shader. Then check pixel coordinates with a tolerance threshold.
 
 ## Blender draft
     
