@@ -8,9 +8,11 @@ project(crystal-model C)
 
 
 # YOU CAN MODIFY
+set(CRYSTAL_MODEL_VERSION pre-release)
+set(CRYSTAL_MODEL_REPO_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../)
+
 set(CRYSTAL_MODEL_ROOT_DIR     ${CMAKE_CURRENT_SOURCE_DIR})
 set(CRYSTAL_MODEL_BINARIES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
-
 
 
 # YOU CAN MODIFY
@@ -47,6 +49,7 @@ message(STATUS "SH_ENGINE_BINARIES_DIR : ${SH_ENGINE_BINARIES_DIR}")
 
 include(${SH_ENGINE_ROOT_DIR}/collection/collection.cmake)
 include(${SH_ENGINE_ROOT_DIR}/docs/shengine-docs.cmake)
+include(${CRYSTAL_MODEL_REPO_ROOT_DIR}/docs/crystallography-model-docs.cmake)
 
 
 function(build_crystal_model)
@@ -58,6 +61,7 @@ build_shengine_docs()
 if(${CRYSTAL_MODEL_BINARY_TYPE} STREQUAL "STATIC")
 add_library(crystal-model STATIC 
     ${CRYSTAL_MODEL_ROOT_DIR}/src/crystal-model.c
+    ${CRYSTAL_MODEL_ROOT_DIR}/src/model-main.c
     #src_files
 )
 
@@ -65,6 +69,7 @@ add_library(crystal-model STATIC
 elseif(${CRYSTAL_MODEL_BINARY_TYPE} STREQUAL "SHARED")
 add_library(crystal-model SHARED 
     ${CRYSTAL_MODEL_ROOT_DIR}/src/crystal-model.c
+    ${CRYSTAL_MODEL_ROOT_DIR}/src/model-main.c
     #src_files
 )
 target_compile_definitions(shengine PUBLIC 
@@ -75,6 +80,7 @@ target_compile_definitions(shengine PUBLIC
 elseif(${CRYSTAL_MODEL_BINARY_TYPE} STREQUAL "EXECUTABLE")
 add_executable(crystal-model  
     ${CRYSTAL_MODEL_ROOT_DIR}/src/crystal-model.c
+    ${CRYSTAL_MODEL_ROOT_DIR}/src/model-main.c
     #src_files
     ${SH_ENGINE_ROOT_DIR}/collection/sheditor/src/shEditor.c
 )
@@ -116,6 +122,7 @@ endfunction()
 
 function(crystal_model_main)
 build_crystal_model()
+build_crystal_model_docs()
 endfunction()
 
 

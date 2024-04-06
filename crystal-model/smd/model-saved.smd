@@ -1,0 +1,5 @@
+FLOAT32    ^^ 4    !! incident_ray    --> 0.758459 0.000000 0.000000 0.000000     ***
+FLOAT32    ^^ 1    !! lambda_ag    --> 5.000000     ***
+FLOAT32    ^^ 1    !! film_distance_cm    --> 1.000000     ***
+UINT32    ^^ 1    !! atom_count    --> 4     ***
+FLOAT32    ^^ 4    !! atoms_positions_ag    --> 0.000000 0.000000 0.000000 1.000000     ***
