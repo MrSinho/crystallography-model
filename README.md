@@ -1,4 +1,4 @@
-# crystallography-model (pre-release)
+# crystallography-model
 
 A 3d simulator of crystallography interference and diffraction images by using the Laue's equation. It's written in C and it uses the [`Vulkan API`](https://www.vulkan.org), [`shengine`](https://mrsinho.github.io/shengine-docs) and [`shvulkan`](https://github.com/mrsinho/shvulkan).
 
@@ -32,17 +32,17 @@ If you exectued the command above by mistake just type ¯git stash` on the termi
 Building the program is fairly simple:
 
 ```shell
-mkdir model/build
-mkdir model/build/windows
-cd    model/build/windows
+mkdir crystal-model/build
+mkdir crystal-model/build/windows
+cd    crystal-model/build/windows
 cmake ../../ -DCRYSTAL_MODEL_BINARY_TYPE=EXECUTABLE -DSH_ENGINE_ROOT_DIR="repo/absolute/path/externals/shengine"
 cmake --build .
 ```
 
 ```shell
-mkdir model/build
-mkdir model/build/linux
-cd    model/build/linux
+mkdir crystal-model/build
+mkdir crystal-model/build/linux
+cd    crystal-model/build/linux
 cmake ../../ -DCRYSTAL_MODEL_BINARY_TYPE=EXECUTABLE -DSH_ENGINE_ROOT_DIR="repo/absolute/path/externals/shengine"
 cmake --build .
 ```
@@ -53,7 +53,7 @@ cmake --build .
 ./bin/windows/crystal-model
 ```
 
-## Usage of configuraction files
+## Usage of configuration files
 
 At `crystal-model/smd/saved.smd` you can edit the main parameters used in crystallography, suchh as the incident ray wavelength and orientation in space, the lattice unit structure and the photosensitive matrix or film distance from the crystal.
 
@@ -80,7 +80,7 @@ To load the written or saved data from `crystal-model/smd/saved.smd` press `LEFT
 
 ![](docs/media/render3.png)
 
-## To do:
+## To do (pre-release):
 
 * Generate real 3d cones with shaders (need to rewrite shaders)
 * Add projections of the cones on the film
@@ -93,6 +93,7 @@ To load the written or saved data from `crystal-model/smd/saved.smd` press `LEFT
 * Compute interference coordinates and angles before fragment shader. Then check pixel coordinates with a tolerance threshold.
 * From soure image to 3d model
 * Make separate views of lattice and of interference rendering
+* shci tests
 
 ![](docs/media/d=2lambda.png)
 
