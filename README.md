@@ -106,9 +106,7 @@ To load the written or saved data from `crystal-model/smd/saved.smd` press `LEFT
 
 </div>
 
-<center>
 ![](docs/media/render3.png)
-</center>
 
 ## To do (pre-release):
 
@@ -125,9 +123,7 @@ To load the written or saved data from `crystal-model/smd/saved.smd` press `LEFT
 * Make separate views of lattice and of interference rendering
 * shci tests
 
-<center>
 ![](docs/media/d=2lambda.png)
-</center>
 
 ## Contributions and support
 
