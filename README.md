@@ -11,8 +11,6 @@ A 3d simulator of crystallography interference and diffraction images using the 
 
 ## Overview
 
-This template has been used on many libraries (see [`shengine`](https://mrsinho.github.io/shengine-docs), [`shgui`](https://mrsinho.github.io/shgui-docs))
-
 ![](.shci/linux/linux-exit-code.svg)
 ![](.shci/windows/windows-exit-code.svg)
 
